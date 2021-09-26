@@ -1,5 +1,5 @@
 #include <eosio/eosio.hpp>
-class [[eosio::contract]] hello : public eosio::contract {
+class [[eosio::contract]] permissions : public eosio::contract {
   public:
       using eosio::contract::contract;
       [[eosio::action]] void what( eosio::name user ) {
