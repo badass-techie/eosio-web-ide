@@ -2,6 +2,7 @@
 
 using namespace eosio;
 using std::string;
+using std::make_tuple;
 
 class [[eosio::contract("addressbook")]] addressbook : public eosio::contract {
   public:
@@ -11,7 +12,7 @@ class [[eosio::contract("addressbook")]] addressbook : public eosio::contract {
     }
 
     //update a row or insert a new row into the table
-    [[eosio::action]] void upsert(name user, string first_name, string last_name, string street, string city, string state) {
+    [[eosio::action]] void upsert(name user, string first_name, string last_name, uint64_t age, string street, string city, string state) {
       require_auth( user ); //make sure this record belongs to the account carrying out this transaction
       address_index addresses(get_self(), get_first_receiver().value);  //instantiate table
       
@@ -24,10 +25,12 @@ class [[eosio::contract("addressbook")]] addressbook : public eosio::contract {
           row.key = user;
           row.first_name = first_name;
           row.last_name = last_name;
+          row.age = age;
           row.street = street;
           row.city = city;
           row.state = state;
         }); //change existing record
+        send_summary(user, "successfully emplaced record to addressbook");
 
       }
       else {
@@ -37,10 +40,12 @@ class [[eosio::contract("addressbook")]] addressbook : public eosio::contract {
           row.key = user;
           row.first_name = first_name;
           row.last_name = last_name;
+          row.age = age;
           row.street = street;
           row.city = city;
           row.state = state;
         }); //create new record
+        send_summary(user, "successfully emplaced record to addressbook");
       }
     }
 
@@ -53,6 +58,13 @@ class [[eosio::contract("addressbook")]] addressbook : public eosio::contract {
       auto iterator = addresses.find(user.value);
       check(iterator != addresses.end(), "Record does not exist");
       addresses.erase(iterator);
+      send_summary(user, " successfully emplaced record to addressbook");
+    }
+
+    //sends transaction receipt to user
+    [[eosio::action]] void notify(name user, string msg) {
+      require_auth(get_self());
+      require_recipient(user);
     }
 
   private:
@@ -60,6 +72,7 @@ class [[eosio::contract("addressbook")]] addressbook : public eosio::contract {
         name key;
         string first_name;
         string last_name;
+        uint64_t age;
         string street;
         string city;
         string state;
@@ -67,8 +80,26 @@ class [[eosio::contract("addressbook")]] addressbook : public eosio::contract {
         uint64_t primary_key() const {
           return key.value;
         }
-    };
 
-  using address_index = eosio::multi_index<"people"_n, person>;
+        uint64_t get_secondary_1() const { 
+          return age;
+        }
+    };
+    
+    void send_summary(name user, string message){
+      action(
+        permission_level{get_self(),"active"_n},
+        get_self(),
+        "notify"_n,
+        make_tuple(user, name{user}.to_string() + message)
+      ).send();  
+    }
+
+    void increment_counter(name user, std::string type) {
+      abcounter::count_action count("abcounter"_n, {get_self(), "active"_n});
+      count.send(user, type);
+    }
+
+    using address_index = eosio::multi_index<"people"_n, person, indexed_by<"byage"_n, const_mem_fun<person, uint64_t, &person::get_secondary_1>>>;
 
 };
