@@ -1,4 +1,5 @@
 #include <eosio/eosio.hpp>
+#include "abcounter.cpp"
 
 using namespace eosio;
 using std::string;
@@ -31,6 +32,7 @@ class [[eosio::contract("addressbook")]] addressbook : public eosio::contract {
           row.state = state;
         }); //change existing record
         send_summary(user, "successfully emplaced record to addressbook");
+        increment_counter(user, "modify");
 
       }
       else {
@@ -46,6 +48,7 @@ class [[eosio::contract("addressbook")]] addressbook : public eosio::contract {
           row.state = state;
         }); //create new record
         send_summary(user, "successfully emplaced record to addressbook");
+        increment_counter(user, "emplace");
       }
     }
 
@@ -59,6 +62,7 @@ class [[eosio::contract("addressbook")]] addressbook : public eosio::contract {
       check(iterator != addresses.end(), "Record does not exist");
       addresses.erase(iterator);
       send_summary(user, " successfully emplaced record to addressbook");
+      increment_counter(user, "erase");
     }
 
     //sends transaction receipt to user
@@ -95,7 +99,7 @@ class [[eosio::contract("addressbook")]] addressbook : public eosio::contract {
       ).send();  
     }
 
-    void increment_counter(name user, std::string type) {
+    void increment_counter(name user, string type) {
       abcounter::count_action count("abcounter"_n, {get_self(), "active"_n});
       count.send(user, type);
     }
