@@ -5,7 +5,7 @@
 
 using namespace eosio;
 
-class [[eosio::contract("hodl")]] hodl : public eosio::contract{
+class [[eosio::contract("hodl")]] hodl : public eosio::contract {
   private:
     static const uint32_t the_party = 1645525342;
     const symbol hodl_symbol;
@@ -16,21 +16,21 @@ class [[eosio::contract("hodl")]] hodl : public eosio::contract{
       uint64_t primary_key() const { return funds.symbol.raw(); }
     };
 
-  public:
-    using contract::contract;
-    hodl(name receiver, name code, datastream<const char *> ds):contract(receiver, code, ds), hodl_symbol("SYS", 4){
-
-    }
+    using balance_table = eosio::multi_index<"balance"_n, balance>;
 
     uint32_t now() {
       return current_time_point().sec_since_epoch();
     }
 
+  public:
+    using contract::contract;
+
+    hodl(name receiver, name code, datastream<const char *> ds) : contract(receiver, code, ds),hodl_symbol("SYS", 4){}
+
     [[eosio::on_notify("eosio.token::transfer")]]
-    void deposit(name hodler, name to, eosio::asset quantity, std::string memo)
-    {
-      if (to != get_self() || hodler == get_self()){
-        print("These are not the droids you are looking for.");
+    void deposit(name hodler, name to, eosio::asset quantity, std::string memo) {
+      if (hodler == get_self() || to != get_self())
+      {
         return;
       }
 
@@ -54,16 +54,16 @@ class [[eosio::contract("hodl")]] hodl : public eosio::contract{
     [[eosio::action]]
     void party(name hodler)
     {
-      //Check the authority of hodler
+      //Check the authority of hodlder
       require_auth(hodler);
 
-      //Check the current time has passed the the_party time
+      // //Check the current time has pass the the party time
       check(now() > the_party, "Hold your horses");
 
       balance_table balance(get_self(), hodler.value);
       auto hodl_it = balance.find(hodl_symbol.raw());
 
-      //Make sure the holder is in the table
+      // //Make sure the holder is in the table
       check(hodl_it != balance.end(), "You're not allowed to party");
 
       action{
@@ -75,5 +75,4 @@ class [[eosio::contract("hodl")]] hodl : public eosio::contract{
 
       balance.erase(hodl_it);
     }
-  }
-}
+};
