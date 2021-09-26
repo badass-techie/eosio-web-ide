@@ -7,7 +7,7 @@ fi
 
 nodeos \
 --genesis-json $DATADIR"/../../genesis.json" \
---signature-provider EOS_PUB_DEV_KEY=KEY:EOS_PRIV_DEV_KEY \
+--signature-provider EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV=KEY:5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3 \
 --plugin eosio::producer_plugin \
 --plugin eosio::producer_api_plugin \
 --plugin eosio::chain_plugin \
