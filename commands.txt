@@ -1,0 +1,30 @@
+cleos wallet create -f default_wallet.pwd
+cleos wallet open
+cleos wallet list
+cleos wallet unlock
+cleos wallet create_key
+cleos wallet import --private-key 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3
+cleos create account eosio alice <public key>
+cleos get account alice
+
+COMPILE
+eosio-cpp -I include -o eosio.token.wasm src/eosio.token.cpp --abigen
+
+DEPLOY
+cleos set contract eosio.token CONTRACTS_DIR/eosio.contracts/contracts/eosio.token --abi eosio.token.abi -p eosio.token@active
+
+CREATE TOKEN
+cleos push action eosio.token create '{"issuer":"alice", "maximum_supply":"1000000000.0000 SYS"}' -p eosio.token@active
+
+ISSUE TOKENS
+cleos push action eosio.token issue '{"to":"alice","quantity":"100.0000 SYS","memo":"memo"}' -p alice@active
+
+TRANSFER TOKENS
+cleos push action eosio.token transfer '{"from":"alice","to":"bob","quantity":"25.0000 SYS","memo":"m"}' -p alice@active
+
+CHECK BALANCE
+cleos get currency balance eosio.token bob SYS
+
+ADD eosio.code TO PERMISSIONS IN ORDER TO EXECUTE INLINE ACTIONS
+cleos set account permission addressbook active --add-code
+
